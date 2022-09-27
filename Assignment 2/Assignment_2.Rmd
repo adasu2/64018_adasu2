@@ -1,0 +1,83 @@
+---
+title: "Assignment 2"
+author: "Ankith Dasu"
+date: "9/23/2022"
+output: pdf_document
+---
+
+```{r}
+
+library(lpSolve)
+```
+
+
+
+```{r}
+#Here we use the Objective function  to maximize
+
+f.obj <- c(420,360,300,
+           420,360,300,
+           420,360,300)
+```
+
+
+```{r}
+#Constraints are defined here
+f.con <- matrix(c(1,1,1,0,0,0,0,0,0,
+                  0,0,0,1,1,1,0,0,0,
+                  0,0,0,0,0,0,1,1,1,
+                  20,15,12,0,0,0,0,0,0,
+                  0,0,0,20,15,12,0,0,0,
+                  0,0,0,0,0,0,20,15,12,
+                  1,0,0,1,0,0,1,0,0,
+                  0,1,0,0,1,0,0,1,0,
+                  0,0,1,0,0,1,0,0,1), nrow = 9,byrow = TRUE)
+
+```
+
+```{r}
+#Set direction of the inequalities(as no.of rows = 9, we have set nine inequalities)
+f.dir <- c("<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=")
+
+```
+
+
+```{r}
+#Set the right hand side coefficients
+#A. All the three plants have the excess capacity to produce 750,900 and 450 units per day
+#B. All the three plants have 13000,12000 and 5000 square feet
+#C. Sales forecast indicate that 900, 1200 and 750 unites would be sold per day by all the three plants
+f.rhs<-c(750,
+         900,
+         450,
+         13000,
+         12000,
+         5000,
+         900,
+         1200,
+         750)
+```
+
+```{r}
+#Find the value of the objective function
+lp("max",f.obj,f.con,f.dir,f.rhs)
+```
+
+
+```{r}
+#Values of the variables
+lp("max",f.obj,f.con,f.dir,f.rhs)$solution
+```
+
+
+```
+
+
