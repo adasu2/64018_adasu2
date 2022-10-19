@@ -1,0 +1,247 @@
+---
+title: "Assignment3"
+author: "Ankith Dasu"
+date: "10/18/2022"
+---
+
+1) Formulating Transportation using R
+```{r}
+library(lpSolveAPI)
+library(tinytex)
+library(lpSolve)
+
+```
+
+#The data here is to be converted into a table format
+```{r}
+#cost matrix
+cost_1 <- matrix(c(22,14,30,600,100,
+                 16,20,24,625,120,
+                 80,60,70,"-","-","210/220"),ncol = 5,nrow = 3,byrow = TRUE)
+colnames(cost_1) <- c("Warehouse_1", "Warehouse_2","Warehouse_3","ProductionCost","Production Capacity")
+
+rownames(cost_1) <- c("Plant_A","Plant_B","Demand")
+
+cost_1
+```
+The Objective function is to Minimize the TC
+$$  \text{Min} \hspace{.2cm} TC = 622 x_{11} + 614 x_{12} + 630 x_{13} + 641 x_{21} + 645 x_{22} + 649 x_{23}$$
+Subject to the following constraints : Supply
+$$X_{11} + X_{12} + X_{13}  >= 100$$
+$$X_{21} + X_{22} + X_{23} >= 120$$
+   
+   
+Subject to the following constraints : Demand
+$$ X_{11} + X_{21} >= 80$$
+$$ X_{12} + X_{22} >= 60$$
+$$ X_{13} + X_{23} >= 70$$
+
+
+Non-Negativity Constraints
+$$ X_{ij} >= 0$$ 
+Where i = 1,2 and j= 1,2,3
+ 
+```{r}
+#The capacity = 220 and Demand = 210. 
+#A "Dummy" row for Warehouse_4 Is added here
+trans.cost_1 <- matrix(c(622,614,630,0,100,
+                       641,645,649,0,120,
+                       80,60,70,10,220), ncol = 5, nrow = 3, byrow = TRUE)
+trans.cost_1
+```
+
+```{r}
+#Defining names for the rows and columns
+colnames(trans.cost_1) <- c("Warehouse_1","Warehouse_2","Warehouse_3","Dummy","Production Capacity")
+
+rownames(trans.cost_1) <- c("Plant_1", "Plant_2","Monthly Demand")
+trans.cost_1
+```
+ 
+```{r}
+#costs matrix
+costs <- matrix(c(622,614,630,0,
+                  641,645,649,0), nrow = 2, byrow = TRUE)
+costs
+
+```
+
+We have to know that Supply function cannot be greater than the specified units where as the Demand function can be greater than the specified units.
+
+```{r}
+#setting up constraint signs and right-hand sides(supply side)
+row.signs <- rep("<=",2)
+row.rhs <- c(100,120)
+
+#Demand side constraints#
+col.signs <- rep(">=",4)
+col.rhs <- c(80,60,70,10)
+
+```
+
+```{r}
+
+lptrans <- lp.transport(costs, "min", row.signs,row.rhs,col.signs,col.rhs)
+
+```
+
+```{r}
+lptrans$solution
+```
+80 AEDs in Plant 2 - Warehouse_1
+
+60 AEDs in Plant 1 - Warehouse_2
+
+40 AEDs in Plant 1 - Warehouse_3
+
+30 AEDs in Plant 2 - Warehouse_3
+
+The above should be the production in each plant and distribution to the three wholesaler warehouses to minimize the overall cost of production as well as shipping.
+
+```{r}
+lptrans$objval
+```
+The combined cost of production and shipping for the defibrilators is $132,790
+```{r}
+lptrans$duals
+```
+
+
+2)Formulate the dual of the transportation problem
+
+Since the primal was to minimize the transportation cost the dual of it would be to maximize the value added(VA). 
+
+U'v are the variables here.
+
+```{r}
+cost_2 <- matrix(c(622,614,630,100,"u1",
+                   641,645,649,120,"u2",
+                   80,60,70,220,"-",
+                   "v1","v2","v3","-","-"),ncol = 5,nrow = 4,byrow = TRUE)
+colnames(cost_2) <- c("Warehouse_1", "Warehouse_2","Warehouse_3","Production Capacity","Supply(Dual)")
+
+rownames(cost_2) <- c("Plant_A","Plant_B","Demand","Demand(Dual)")
+```
+
+
+
+
+$$  \text{Max} \hspace{.2cm} VA = 100 P_{1} + 120 P_{2} +80 W_{1} + 60 W_{2} + 70 W_{3}$$
+
+Total Profit Constraints
+$$ u_{1} + v_{1} <= 622$$
+$$ u_{1} + v_{2} <= 614$$
+$$ u_{1} + v_{3} <= 630$$
+$$ u_{2} + v_{1} <= 641$$
+$$ u_{2} + v_{2} <= 645$$
+$$ u_{2} + v_{3} <= 649$$
+These are taken from the transposed matrix of the Primal of the LP. These are unrestricted where $$ u_{k} , v_{l}$$ where u=1,2 and v=1,2,3
+
+```{r}
+#Objective function
+
+f.obj <- c(100,120,80,60,70)
+
+#transposed from the constraints matrix in the primal
+f.con <- matrix(c(1,0,1,0,0,
+                  1,0,0,1,0,
+                  1,0,0,0,1,
+                  0,1,1,0,0,
+                  0,1,0,1,0,
+                  0,1,0,0,1), nrow = 6, byrow = TRUE)
+
+f.dir <- c("<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=",
+           "<=")
+
+f.rhs <- c(622,614,630,641,645,649)
+lp("max",f.obj,f.con,f.dir,f.rhs)
+
+lp("max",f.obj,f.con,f.dir,f.rhs)$solution
+```
+Z=139,120 and variables are:
+$$ u_{1} = 614$$
+$$ u_{2} = 633$$ 
+$$ v_{1} = 8$$
+$$ v_{3} = 16$$
+So Z = $139,120 and variables are $$ u_{1} = 614$$ which represents Plant A
+$$u_{2}=633$$ which represents Plant B
+$$v_{1}=8$$ which represents Warehouse_1
+$$v_{2}=16$$ which represents Warehouse_3
+
+
+3) Economic Interpretation of the dua:
+
+  minimal Z(Primal) = 132790 
+  maximum Z(Dual) = 139120. 
+  We understood that we should not be shipping from Plant(A/B) to all the three Warehouses. 
+  Shipping should be done from
+
+$$ 60 X_{12}$$ which is 60 Units from Plant A to Warehouse 2.
+$$ 40 X_{13}$$ which is 40 Units from Plant A to Warehouse 3.
+$$ 80 X_{13}$$ which is 60 Units from Plant B to Warehouse 1.
+$$ 30 X_{13}$$ which is 60 Units from Plant B to Warehouse 3.
+
+We will Max the profit from each distribution to the respective capacity.
+
+
+$$ \hspace{2cm} u_{1} ^0 -v_{1} ^0 \le 622 $$ then we subtract $$ \hspace{2cm} v_{1} ^0 $$ to the other side to get  $$\hspace{2cm} u_{1} ^0\le 622 - v_{1} ^0 $$
+To compute it would be $614 <= (-8+622) which is correct. we would continue to evaluate these equations:
+$$ \hspace{2cm} u_{1}\le 622 - v_{1} => 614\le622 - 8 = 614=>correct$$
+$$ \hspace{2cm} u_{1}\le 614 - v_{2} => 614\le614 - 0 = 614=>correct$$
+$$ \hspace{2cm} u_{1}\le 630 - v_{3} => 614\le630 - 16 = 614=>correct$$
+$$ \hspace{2cm} u_{2}\le 641 - v_{1} => 633\le614 - 8 = 633=>correct$$
+$$ \hspace{2cm} u_{2}\le 645 - v_{2} => 633\le645 - 0 = 645=> Incorrect$$
+$$ \hspace{2cm} u_{2}\le 649 - v_{3} => 633\le649 - 16 = 633=>correct$$
+From the above using  the Sensitivity and Duality, the shadow price can be tested.
+Change 100 to 101 and 120 to 121 in our LP Transport.
+
+```{r}
+row.rhs1 <- c(101,120)
+row.signs1 <- rep("<=",2)
+col.rhs1 <- c(80,60,70,10)
+col.signs1 <- rep(">=",4)
+row.rhs2 <- c(100,121)
+row.signs2 <- rep("<=",2)
+col.rhs2 <- c(80,60,70,10)
+col.signs2 <- rep(">=",4)
+
+lp.transport(costs,"min",row.signs,row.rhs,col.signs,col.rhs)
+
+lp.transport(costs,"min",row.signs1,row.rhs1,col.signs1,col.rhs1)
+
+lp.transport(costs,"min",row.signs2,row.rhs2,col.signs2,col.rhs2)
+
+```
+
+The 'min' of the specific function is taken here and we observe that the number goes down by 19. 
+This indicates the shadow price is 19, that was found from the primal and adding 1 to each of the Plants.
+Here, Plant B does not have a shadow price. 
+
+From the dual variable $$ v_{1}$$ where Marginal Revenue <= Marginal Cost. The equation was $$ \hspace{2cm} u_{2}\le 645 - v_{2} => 633\le645 - 0 = 645=> Incorrect$$ and this was found by using $$ \hspace{2cm} u_{1} ^0 -v_{1} ^0 \le 622 $$ then we subtract $$ \hspace{2cm} v_{1} ^0 $$ to the other side to get  $$\hspace{2cm} u_{1} ^0\le 622 - v_{1} ^0 $$
+
+
+The economic interpretation of the dual follows the universal rule of profit maximization which is MR >= MC 
+
+
+```{r}
+lp("max", f.obj,f.con, f.dir,f.rhs)$solution
+```
+
+Warehouse1 >= Plant1 + 621 i.e. MR1 >= MC1
+
+Marginal Revenue which is the revenue generated for each additional unit sold relative to Marginal Cost (MC).
+This is the change in cost at Plant 1 by inducing an increase in the supply function should be greater than or equal to the revenue generated for each additional unit distributed to Warehouse 1.
+
+$$ 60 X_{12}$$ which is 60 Units from Plant A to Warehouse 2.
+$$ 40 X_{13}$$ which is 40 Units from Plant A to Warehouse 3.
+$$ 80 X_{13}$$ which is 60 Units from Plant B to Warehouse 1.
+$$ 30 X_{13}$$ which is 60 Units from Plant B to Warehouse 3.
+
+Out of 6, 5 of them had MR <= MC. 
+Here we need MR=MC.
+Plant B to Warehouse_2 does not satisfy the requirement. Hence, there will not be any AED device shipment.
+
