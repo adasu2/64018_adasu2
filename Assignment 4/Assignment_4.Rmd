@@ -1,0 +1,168 @@
+---
+title: "Assignment4"
+author: "Ankith Dasu"
+date: "10/30/2022"
+output: pdf_document
+---
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+```{r}
+library(lpSolveAPI)
+library(ucminf)
+library(Benchmarking)
+library(quadprog)
+```
+
+#Question 1: Formulate and perform DEA analysis under all DEA assumptions FDH, CRS,VRS,IRS,DRS and FRH. 
+#Question 2: Determine Peers and Lambdas under each of the above assumption
+
+```{r}
+#Defining Matrix
+Health_Care<- matrix(c("F1","F2","F3","F4","F5","F6",
+  150,400,320,520,350,320,
+  0.2,0.7,1.2,2.0,1.2,0.7,
+  14000,14000,42000,28000,19000,14000,
+  3500,21000,10500,42000,25000,15000),ncol = 5,byrow = F)
+ 
+colnames(Health_Care) <- c("DMU","Staff Hours Per day","Supplies per day","Reimbursed Patient Days","Privately Paid Patient Days")
+
+table.Health_Care <- as.table(Health_Care)
+table.Health_Care
+
+X<- matrix(c(150,400,320,520,350,320,
+             0.2,0.7,1.2,2.0,1.2,0.7),ncol = 2)
+
+Y<- matrix(c(14000,14000,42000,28000,19000,14000,
+             3500,21000,10500,42000,25000,15000), ncol = 2)
+
+colnames(X) <- c("Staff Hours Per day", "Supplies Per day")
+
+colnames(Y) <- c("Reimbursed Patient Days", "Privatley Paid Patient Days")
+
+X
+Y
+
+#1)CRS Assumption
+CRS <- dea(X,Y,RTS = "crs")
+CRS
+peers(CRS)
+lambda(CRS)
+dea.plot.frontier(X,Y,RTS = "crs")
+summary(CRS, digits = 4)
+```
+
+```{r}
+#2)DRS Assumptions
+
+DRS <- dea(X,Y,RTS = "drs")
+DRS
+peers(DRS)
+lambda(DRS)
+dea.plot.frontier(X,Y,RTS = "drs")
+summary(DRS, digits = 4)
+```
+
+
+```{r}
+#3)IRS Assumptions
+
+IRS <- dea(X,Y,RTS = "irs")
+IRS
+peers(IRS)
+lambda(IRS)
+dea.plot.frontier(X,Y,RTS = "irs")
+summary(IRS,digits = 4)
+```
+
+```{r}
+#4)VRS Assumptions
+
+VRS <- dea(X,Y,RTS = "VRS")
+VRS
+peers(VRS)
+lambda(VRS)
+dea.plot.frontier(X,Y,RTS = "VRS")
+summary(VRS, digits = 4)
+```
+
+```{r}
+#5) FDH Assumptions
+FDH <- dea(X,Y,RTS = "FDH")
+FDH
+peers(FDH)
+lambda(FDH)
+dea.plot.frontier(X,Y,RTS = "FDH")
+summary(FDH, digits = 4)
+```
+
+```{r}
+#6)FRH Assumptions
+
+FRH <- dea(X,Y,RTS = "add") #specifying RTS = "add"
+FRH
+peers(FRH)
+lambda(FRH)
+dea.plot.frontier(X,Y,RTS = "add")
+summary(FRH, digits = 4)
+```
+
+#QUESTION 3: Summarize the results in a tabular format
+
+```{r}
+#Inefficient DMU's
+Health_Care.inefficient <- matrix(c("CRS","DRS","IRS","VRS","FDH","FRH",
+2,2,1,1,0,0,
+"Facility 5&6", "Facility 5&6", "Facility 6", "Facility 6", "-", "-",
+"97.75% & 86.7%", "97.75% & 86.7%", "89.63%","89.63%","-","-",
+"Facility 1,2 & 4", "Facility 1,2 & 4","Facility 1,2 & 5", "Facility 1,2 & 5","-","-",
+"0.2,0.08,0.54 and 0.34,0.4,0.13","0.2,0.08,0.54 and 0.34,0.4,0.13", "0.4,0.34 and 0.26", "0.4,0.34 and 0.26", "-","-"), ncol = 6, byrow = F)
+
+colnames(Health_Care.inefficient) <- c("RTS", "Count_Inefficient", "Name","Inefficiency %", "Peers", "Lambda")
+
+as.table(Health_Care.inefficient)
+
+```
+
+```{r}
+#Efficient DMUs
+Health_Care.efficient <- matrix(c("CRS", "DRS", "IRS", "VRS", "FDH", "FRH",
+"Facility 1, 2, 3 & 4", "Facility 1, 2, 3, & 4", "Facility 1, 2, 3, 4 & 5", "Facility 1, 2, 3, 4 & 5", "All DMUs", "All DMUs"), ncol = 2, byrow = F)
+
+colnames(Health_Care.efficient) <- c("RTS", "Efficient DMUs")
+
+as.table(Health_Care.efficient)
+```
+
+
+#QUESTION 4: Compare and contrast the above results.
+
+Conclusion:
+a) DEA is a benchmarking tool that evaluates a population of DMUs in their performance in converting input to outputs.
+b) Inefficient peers will have peers and lambda weights whereas, efficient peers will not have peers and lambda weights.
+c) DEA allows the firm in deciding the best DMU and also in analyzing which DMU can be maximized which will lead to increase, decrease or any variations. 
+d) A firm can also decide on which RTS to employ based on their requirements.
+
+1. CRS - Constant Return to Scale:
+From the results obtained above it is clear that DMUs 1, 2 , 3  and 4 are efficient and DMU 5 is 97.75% and DMU 6 is  86.7%  respectively efficient. 
+The peer units for DMU 4 are 1,2 and 4 with weights of 0.2, 0.08 and 0.54 and for DMU 6 peer units are 1, 2 and 4 with weights of 0.34, 0.4 and 0.13 respectively. 
+CRS  helps us to find out if any DMUs can be scaled up or down. DMUs 1, 2,3 and 4 can be scaled up
+
+2. DRS - Decreasing Return to Scale:
+From the results obtained above it is clear that DMUs 1, 2 , 3  and 4 are efficient and DMU 5 is 97.75% and DMU 6 is  86.7%  respectively efficient. The peer units for DMU 4 are 1,2 and 4 with weights of 0.2, 0.08 and 0.54 and for DMU 6 peer units are 1, 2 and 4 with weights of 0.34, 0.4 and 0.13 respectively. CRS  helps us to find out if any DMUs can be scaled up or down. DMUs 5 and 6 can be scaled down. 
+
+3. IRS - Increasing Return to Scale:
+From the results obtained above it is clear that DMUs 1, 2 , 3, 4  and 5 are efficient and DMU 6 is only 89.63%. The peer units for DMU 6 are 1,2 and 5 with weights of 0.4, 0.34 and 0.26 respectively. IRS helps in finding out if the firm can increase the scale of operations by checking the efficiency scores. 
+
+4. VRS- Variable Returns to Scale:
+From the results obtained above it is clear that DMUs 1, 2 , 3, 4  and 5 are efficient and DMU 6 is only 89.63%. The peer units for DMU 6 are 1,2 and 5 with weights of 0.4, 0.34 and 0.26 respectively. VRS helps in understanding the scale of operations with any variations towards inputs and outputs by increasing , decreasing or both.
+
+5. FDH - Free Disposability Hull:
+From the above results it is clear that all the DMUs are efficient. This method allows the scale to capture all the levels of efficiency.
+
+6. FRH - Free Replicability Hull:
+From the above results it is clear that all the DMUs are efficient. This method allows the scale to capture all the levels of efficiency which is free from replication and disposal.
+
+
+
+
