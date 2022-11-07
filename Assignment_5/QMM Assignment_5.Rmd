@@ -1,0 +1,103 @@
+---
+title: "Assignment5"
+author: "Ankith Dasu"
+date: "11/06/2022"
+output: pdf_document
+---
+
+```{r}
+library(lpSolveAPI)
+library(lpSolve)
+
+```
+Maximize Z = P - 6C - 3D, where  
+ 
+P = total (discounted) profit over the life of the new products, 
+C = change (in either direction) in the current level of employment, 
+D = decrease (if any) in next year’s earnings from the current year’s level.
+
+TOTAL PROFIT P = 20(x1)+15(x2)+25(x3)
+EMPLOYMENT LEVEL = 6(x1)+4(x2)+5(x3) = 50
+EARNINGS NEXT YEAR = 8(x1)+7(x2)+(5x3) >= 75
+
+CONSTRAINTS:
+6x1 + 4x2 + 5x3 + y1n - y1p = 50;
+8x1 + 7x2 + 5x3 + y2n - y2p = 75;
+
+OBJECTIVE FUNCTION (MAXIMIZE):
+max: 20x1 + 15x2 + 25x3 - 6y1n - 6y1p - 3y2n
+
+
+
+# Q1. Define y1+ and y1-, respectively, as the amount over (if any) and the amount under (if any) the employment level goal. Define y2+ and y2- in the same way for the goal regarding earnings next year. Define x1, x2, and x3 as the production rates of Products 1, 2, and 3, respectively. With these definitions, use the goal programming technique to express y1+, y1- , y2+ and y2-  algebraically in terms of x1, x2, and x3. Also express P in terms of x1, x2, and x3. 
+
+# Q2. Express management’s objective function in terms of x1, x2, x3, y1+, y1- , y2+ and y2-.
+
+Defining Variables:
+x1 = production rate of Product 1
+x2 = production rate of Product 2
+x3 = production rate of Product 3
+y1p = y1+ = Amount Over
+y1n = y2- = Amount Under
+y2p and y2n = Same way for the goal regarding earnings next year
+P in terms of x1,x2 and x3 and Objective function in terms of x1,x2,x3,y1p,y1n,y2p,y2n
+
+```{r}
+EMAX_df <- read.lp("EMAX.lp")
+print(EMAX_df)
+```
+
+```{r}
+EMAX_table <- matrix(c("Total Profit", "Employment level", "Earnings Next Year",
+                       20,6,8,
+                       15,4,7,
+                       25,5,5,
+                       "Maximize", "=50", ">=75",
+                       "Millions of $","Hundreds of Employees","Millions of $"), ncol=6,byrow = F)
+
+
+colnames(EMAX_table) <- c("Factor", "Product1", "Product2", "Product3", "Goal", "Units")
+
+as.table(EMAX_table)
+
+
+```
+
+# 3. Formulate and solve the linear programming model. What are your findings?
+
+```{r}
+solve(EMAX_df)
+
+get.objective(EMAX_df)
+
+get.constraints(EMAX_df)
+
+get.variables(EMAX_df)
+
+```
+
+Findings:
+
+x1 = 0
+x2 = 0
+x3 = 15
+y1p = 25
+y1n = 0
+y2p = 0
+y2n = 0
+
+Product1 - 20Units,  Product2 - 15Units
+As the solution is 0, the above mentioned products cannot be produced.
+
+Product3 - 15Units
+The above mentioned product can be produced by the firm to achieve the Maximum profit
+
+Number of employees can only be 5000. Here, the firm exceeded it by 25 employment levels.
+This caused 25000 employees to be penalized and there was a deduction of 150 units.
+Here, while i was defining the variables, I have explained that y1p and y2n will be the 'Amount over' or 'Amount under' over the upcoming years and when we see our solution it is a 0 from the current level.
+So, this indicates that there will be no increase or decrease in the earnings and it shall remain constant next year. Earnings goal for the upcoming year has been met.
+So, it is clear from the objective function that firm will have a  225 million dollars as the maximum profit. 
+
+	
+
+
