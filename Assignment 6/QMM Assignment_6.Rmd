@@ -1,0 +1,76 @@
+---
+title: "Assignment6"
+author: "Ankith Dasu"
+date: "11/19/2022"
+output: pdf_document
+---
+
+
+
+```{r}
+library(lpSolveAPI)
+```
+
+```{r}
+ap <- read.lp("ap.lp")
+print(ap)
+```
+
+```{r}
+
+Workers <- matrix(c("Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",18,27,22,26,25,21,19), ncol = 2, byrow = F)
+
+colnames(Workers) <- c("Day", "Workers")
+
+as.table(Workers)
+```
+Package handlers at AP are guaranteed a five-day work week with two consecutive days off. The base wage for the handlers is $750 per week. Workers working on Saturday or Sunday receive an additional $25 per day. 
+
+```{r}
+Days_off_and_wages <- matrix(c(1,2,3,4,5,6,7,
+                               "Sunday and Monday","Monday and Tuesday", "Tuesday and Wednesday", "Wednesday and Thursday", "Thursday and Friday", "Friday and Saturday", "Saturday and Sunday","$775", "$800","$800", "$800", "$800", "$775", "$750"), ncol = 3, byrow = F)
+
+colnames(Days_off_and_wages) <- c("Shift", "Days_off", "Wage")
+
+as.table(Days_off_and_wages)
+                               
+```
+```{r}
+
+solve(ap)
+
+```
+
+```{r}
+#Objective function (Total cost)
+
+get.objective(ap)
+```
+Total cost to the firm after keeping total wage expense as low as possible while ensuring that there are sufficient workers available each day is $25,675
+
+
+```{r}
+#Variables (No of workers available each day)
+
+get.variables(ap)
+```
+
+Findings:
+
+No.of workers in shift1 = 2
+No.of workers in shift2 = 4
+No.of workers in shift3 = 5
+No.of workers in shift4 = 0
+No.of workers in shift5 = 8
+No.of workers in shift6 = 1
+No.of workers in shift7 = 13
+
+Here, Workers available to work each day in terms of the objective function and constraints:
+
+Workers on Sunday: x2+x3+x4+x5+x6 >= 18;
+Workers on Monday: x3+x4+x5+x6+x7 >= 27;
+Workers on Tuesday: x4+x5+x6+x7+x1 >= 22;
+Workers on Wednesday: x5+x6+x7+x1+x2 >= 26;
+Workers on Thursday: x6+x7+x1+x2+x3 >= 25;
+Workers on Friday: x7+x1+x2+x3+x4 >= 21;
+Workers on Saturday: x1+x2+x3+x4+x5 >= 19;
